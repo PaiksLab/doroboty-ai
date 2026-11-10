@@ -28,6 +28,7 @@ export function RecruitingApplication({ application }: { application: Applicatio
         companyName={company?.name ?? ""}
         audience="employer"
         history={application.events}
+        showWorkSample={application.id === "application-example"}
         statusRef={statusRef}
         footer={
           availableStages.length > 0 ? (

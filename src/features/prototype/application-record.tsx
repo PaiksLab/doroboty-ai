@@ -1,10 +1,12 @@
-import type { ReactNode, Ref } from "react";
+import { useState, type ReactNode, type Ref } from "react";
 import { BackLink } from "@/components/back-link";
 import { ProcessTimeline } from "@/components/process-timeline";
 import { RecordSheet } from "@/components/record-sheet";
 import { CvAttachment } from "./cv-attachment";
 import { MatchScore } from "./match-score";
 import { stageLabels, type Application, type Stage } from "./model";
+import { createEmptyWorkSampleReviewDraft } from "./work-sample";
+import { WorkSampleReview } from "./work-sample-review";
 
 type RecordEvent = { stage: Stage; at: string; note?: string };
 const dateFormat = new Intl.DateTimeFormat("pl-PL", {
@@ -18,6 +20,7 @@ export function ApplicationRecord({
   companyName,
   audience,
   history,
+  showWorkSample = false,
   statusRef,
   children,
   footer,
@@ -29,6 +32,7 @@ export function ApplicationRecord({
   companyName: string;
   audience: "candidate" | "employer";
   history: RecordEvent[];
+  showWorkSample?: boolean;
   statusRef?: Ref<HTMLSpanElement>;
   children?: ReactNode;
   footer?: ReactNode;
@@ -37,6 +41,55 @@ export function ApplicationRecord({
   const title = candidate ? application.jobTitle : application.candidateName;
   const context = candidate ? application.candidateName : application.jobTitle;
   const submitted = history[0];
+  const [workSampleDraft, setWorkSampleDraft] = useState(createEmptyWorkSampleReviewDraft);
+  const [workSampleCompleted, setWorkSampleCompleted] = useState(false);
+  const includeWorkSample = showWorkSample && !candidate;
+  const sections = [
+    {
+      value: "answer",
+      label: "Odpowiedź",
+      content: (
+        <>
+          <h3>Przesłana aplikacja</h3>
+          <p>{application.answer}</p>
+        </>
+      ),
+    },
+    ...(includeWorkSample
+      ? [
+          {
+            value: "work-sample",
+            label: "Próbka pracy",
+            content: (
+              <WorkSampleReview
+                draft={workSampleDraft}
+                completed={workSampleCompleted}
+                onDraftChange={(draft) => {
+                  setWorkSampleDraft(draft);
+                  setWorkSampleCompleted(false);
+                }}
+                onComplete={() => setWorkSampleCompleted(true)}
+              />
+            ),
+          },
+        ]
+      : []),
+    {
+      value: "cv",
+      label: "CV",
+      content: (
+        <>
+          <h3>CV z momentu aplikowania</h3>
+          <CvAttachment
+            candidateId={application.candidateId}
+            fallbackText={application.cv}
+            layout="row"
+            preview
+          />
+        </>
+      ),
+    },
+  ];
   return (
     <article className="recruiting-record">
       <header className="recruiting-header">
@@ -67,33 +120,7 @@ export function ApplicationRecord({
       <div className="recruiting-layout">
         <RecordSheet
           label={candidate ? "Twoja wysłana aplikacja" : "Materiały kandydata"}
-          sections={[
-            {
-              value: "answer",
-              label: "Odpowiedź",
-              content: (
-                <>
-                  <h3>Przesłana aplikacja</h3>
-                  <p>{application.answer}</p>
-                </>
-              ),
-            },
-            {
-              value: "cv",
-              label: "CV",
-              content: (
-                <>
-                  <h3>CV z momentu aplikowania</h3>
-                  <CvAttachment
-                    candidateId={application.candidateId}
-                    fallbackText={application.cv}
-                    layout="row"
-                    preview
-                  />
-                </>
-              ),
-            },
-          ]}
+          sections={sections}
           footer={footer}
         >
           {children}

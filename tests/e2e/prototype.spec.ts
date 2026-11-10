@@ -699,8 +699,12 @@ test("process sheet keeps notes across keyboard tabs and saves stage history wit
   const text = "Dopytać o decyzje dotyczące automatyzacji obsługi.";
   await note.fill(text);
   const answer = page.getByRole("tab", { name: "Odpowiedź", exact: true });
+  const sample = page.getByRole("tab", { name: "Próbka pracy", exact: true });
   const cv = page.getByRole("tab", { name: "CV", exact: true });
   await answer.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(sample).toBeFocused();
+  await expect(sample).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowRight");
   await expect(cv).toBeFocused();
   await expect(cv).toHaveAttribute("aria-selected", "true");
