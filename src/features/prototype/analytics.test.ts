@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CaptureResult } from "posthog-js";
 import {
+  captureOptionalAnalytics,
+  getAnalyticsConfig,
   getFrontendErrorProperties,
   getUiClickProperties,
   sanitizeAnalyticsEvent,
@@ -43,5 +45,24 @@ describe("analytics privacy", () => {
   it("reports browser errors without messages, stacks, URLs, or rejected values", () => {
     expect(getFrontendErrorProperties("window")).toEqual({ error_source: "window" });
     expect(getFrontendErrorProperties("promise")).toEqual({ error_source: "promise" });
+  });
+
+  it("disables unused PostHog remote features and external scripts", () => {
+    const config = getAnalyticsConfig();
+    expect(config.advanced_disable_flags).toBe(true);
+    expect(config.disable_external_dependency_loading).toBe(true);
+    expect(config.disable_session_recording).toBe(true);
+    expect(config.disable_surveys).toBe(true);
+    expect(config.disable_product_tours).toBe(true);
+    expect(config.disable_web_experiments).toBe(true);
+    expect(config.opt_out_capturing_by_default).toBe(true);
+  });
+
+  it("swallows synchronous analytics failures so product actions can continue", () => {
+    expect(() =>
+      captureOptionalAnalytics(() => {
+        throw new Error("offline");
+      }),
+    ).not.toThrow();
   });
 });

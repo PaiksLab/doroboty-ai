@@ -62,6 +62,32 @@ export function getFrontendErrorProperties(source: "window" | "promise") {
   return { error_source: source };
 }
 
+export function getAnalyticsConfig() {
+  return {
+    api_host: apiHost,
+    defaults: "2026-08-30" as const,
+    capture_pageview: "history_change" as const,
+    capture_pageleave: "if_capture_pageview" as const,
+    autocapture: false,
+    disable_session_recording: true,
+    disable_external_dependency_loading: true,
+    disable_surveys: true,
+    disable_product_tours: true,
+    disable_web_experiments: true,
+    advanced_disable_flags: true,
+    opt_out_capturing_by_default: true,
+    before_send: sanitizeAnalyticsEvent,
+  };
+}
+
+export function captureOptionalAnalytics(capture: () => void) {
+  try {
+    capture();
+  } catch {
+    // Analytics is optional and must not interrupt a user action.
+  }
+}
+
 function captureUiClick(event: MouseEvent) {
   if (!(event.target instanceof Element)) return;
   if (event.target.closest(".ph-no-autocapture, [data-ph-no-autocapture]")) return;
@@ -76,16 +102,7 @@ export function initializeAnalytics() {
   if (initialized || !import.meta.env.PROD || !projectToken || !apiHost) return;
 
   try {
-    posthog.init(projectToken, {
-      api_host: apiHost,
-      defaults: "2026-08-30",
-      capture_pageview: "history_change",
-      capture_pageleave: "if_capture_pageview",
-      autocapture: false,
-      disable_session_recording: true,
-      opt_out_capturing_by_default: true,
-      before_send: sanitizeAnalyticsEvent,
-    });
+    posthog.init(projectToken, getAnalyticsConfig());
 
     document.addEventListener("click", captureUiClick);
     window.addEventListener("error", () => {
@@ -124,10 +141,6 @@ export function captureAnalyticsEvent(
   properties?: Record<string, string | number | boolean>,
 ) {
   if (getAnalyticsConsent() === "granted") {
-    try {
-      posthog.capture(event, properties);
-    } catch {
-      // Analytics is optional and must not interrupt a user action.
-    }
+    captureOptionalAnalytics(() => posthog.capture(event, properties));
   }
 }

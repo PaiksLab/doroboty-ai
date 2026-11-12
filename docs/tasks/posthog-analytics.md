@@ -11,9 +11,9 @@ Add minimal, consent-gated PostHog analytics to the hosted DoRoboty.ai course pr
 - Search/query parameters and typed input values are removed or excluded from captured payloads.
 - After explicit consent, browser errors may emit only a generic source (`window` or `promise`), never the error message, stack, rejected value, or page URL.
 - Analytics setup and capture failures do not interrupt product use.
-- Session recording, heatmaps, web vitals, and development-environment collection remain disabled.
+- Session recording, surveys, product tours, feature flags, remote config, external scripts, heatmaps, web vitals, and development-environment collection remain disabled.
 - `FEATURES.md` reflects the new behavior; no dashboard or funnel is created as part of this task.
 
 ## Verification
 
-Unit tests verify URL and DOM-content sanitization and the minimal browser-error properties. After deployment, confirm a pageview, one safe click, and (with consent on synthetic data) the generic error signal in PostHog; then repeat with consent denied and verify no events are sent. This file records implementation intent; it does not claim production verification has occurred.
+Unit tests verify URL and DOM-content sanitization, minimal browser-error properties, disabled remote features, and non-blocking capture failures. After deployment, confirm a pageview, one safe click, and (with consent on synthetic data) the generic error signal in PostHog; then repeat with consent denied and verify no events are sent. This file records implementation intent; it does not claim production verification has occurred.
