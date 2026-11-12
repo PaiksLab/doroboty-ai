@@ -1,4 +1,4 @@
-import posthog, { type CaptureResult } from "posthog-js";
+import posthog, { type AutocaptureConfig, type CaptureResult } from "posthog-js";
 
 type AnalyticsConsent = "granted" | "denied" | "pending" | "unavailable";
 
@@ -59,10 +59,6 @@ export function sanitizeAnalyticsEvent(event: CaptureResult): CaptureResult {
   return event;
 }
 
-export function getUiClickProperties(tagName: string) {
-  return { element_type: tagName.toLowerCase() === "a" ? "link" : "button" };
-}
-
 export function getFrontendErrorProperties(source: "window" | "promise") {
   return { error_source: source };
 }
@@ -82,7 +78,14 @@ export function getAnalyticsConfig() {
     capture_pageview: false,
     capture_pageleave: false,
     disable_capture_url_hashes: false,
-    autocapture: false,
+    autocapture: {
+      dom_event_allowlist: ["click"],
+      element_allowlist: ["a", "button"],
+      css_selector_ignorelist: [".ph-no-autocapture", "[data-ph-no-autocapture]"],
+      capture_copied_text: false,
+    } satisfies AutocaptureConfig,
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     disable_session_recording: true,
     disable_external_dependency_loading: true,
     disable_surveys: true,
@@ -102,23 +105,12 @@ export function captureOptionalAnalytics(capture: () => void) {
   }
 }
 
-function captureUiClick(event: MouseEvent) {
-  if (!(event.target instanceof Element)) return;
-  if (event.target.closest(".ph-no-autocapture, [data-ph-no-autocapture]")) return;
-
-  const element = event.target.closest("a, button");
-  if (element) {
-    captureAnalyticsEvent("ui_element_clicked", getUiClickProperties(element.tagName));
-  }
-}
-
 export function initializeAnalytics() {
   if (initialized || !import.meta.env.PROD || !projectToken || !apiHost) return;
 
   try {
     posthog.init(projectToken, getAnalyticsConfig());
 
-    document.addEventListener("click", captureUiClick);
     window.addEventListener("error", () => {
       captureAnalyticsEvent("frontend_error", getFrontendErrorProperties("window"));
     });

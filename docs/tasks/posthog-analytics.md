@@ -6,7 +6,8 @@ Add minimal, consent-gated PostHog analytics to the hosted DoRoboty.ai course pr
 
 ## Acceptance criteria
 
-- Production hash-route pageviews and clicks on links/buttons appear in the EU PostHog project after explicit consent.
+- Production hash-route pageviews and PostHog autocapture clicks on links/buttons appear in the EU project after explicit consent.
+- Autocapture is limited to click events on links and buttons; DOM text, element attributes, copied text, typed values, and search parameters are excluded.
 - Opening and saving or removing a job offer emit named events with only a synthetic job ID and source; no job title, company/person name, or free text is sent in these custom events.
 - Search/query parameters and typed input values are removed or excluded from captured payloads.
 - After explicit consent, browser errors may emit only a generic source (`window` or `promise`), never the error message, stack, rejected value, or page URL.
@@ -16,4 +17,4 @@ Add minimal, consent-gated PostHog analytics to the hosted DoRoboty.ai course pr
 
 ## Verification
 
-Unit tests verify URL and DOM-content sanitization, minimal browser-error properties, disabled remote features, and non-blocking capture failures. After deployment, confirm a pageview, one safe click, and (with consent on synthetic data) the generic error signal in PostHog; then repeat with consent denied and verify no events are sent. This file records implementation intent; it does not claim production verification has occurred.
+Unit tests verify URL and DOM-content sanitization, minimal browser-error properties, masked click-only autocapture, disabled remote features, and non-blocking capture failures. After deployment, confirm a pageview and one `$autocapture` from production in PostHog; with consent denied, verify no events are sent. This file records implementation intent; production verification is recorded separately after the deployment is inspected.

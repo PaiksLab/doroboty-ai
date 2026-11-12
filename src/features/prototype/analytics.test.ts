@@ -4,7 +4,6 @@ import {
   captureOptionalAnalytics,
   getAnalyticsConfig,
   getFrontendErrorProperties,
-  getUiClickProperties,
   sanitizeAnalyticsEvent,
 } from "./analytics";
 
@@ -37,11 +36,6 @@ describe("analytics privacy", () => {
     expect(sanitized.properties.job_id).toBe("synthetic-job-1");
   });
 
-  it("records only a coarse element type for link and button clicks", () => {
-    expect(getUiClickProperties("A")).toEqual({ element_type: "link" });
-    expect(getUiClickProperties("BUTTON")).toEqual({ element_type: "button" });
-  });
-
   it("reports browser errors without messages, stacks, URLs, or rejected values", () => {
     expect(getFrontendErrorProperties("window")).toEqual({ error_source: "window" });
     expect(getFrontendErrorProperties("promise")).toEqual({ error_source: "promise" });
@@ -56,6 +50,14 @@ describe("analytics privacy", () => {
     expect(config.disable_product_tours).toBe(true);
     expect(config.disable_web_experiments).toBe(true);
     expect(config.opt_out_capturing_by_default).toBe(true);
+    expect(config.autocapture).toEqual({
+      dom_event_allowlist: ["click"],
+      element_allowlist: ["a", "button"],
+      css_selector_ignorelist: [".ph-no-autocapture", "[data-ph-no-autocapture]"],
+      capture_copied_text: false,
+    });
+    expect(config.mask_all_text).toBe(true);
+    expect(config.mask_all_element_attributes).toBe(true);
   });
 
   it("swallows synchronous analytics failures so product actions can continue", () => {
