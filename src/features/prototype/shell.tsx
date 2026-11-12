@@ -19,6 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { currentPerson } from "./model";
 import { usePrototype } from "./store";
 import { cn } from "@/lib/utils";
+import { captureAnalyticsEvent, getRoutePageviewProperties } from "./analytics";
 const navigation = [
   { to: "/oferty", label: "Oferty" },
   { to: "/metodologia", label: "Metodologia" },
@@ -74,6 +75,9 @@ export function Shell() {
   const [menuAt, setMenuAt] = useState<string | null>(null);
   const main = useRef<HTMLElement>(null);
   const lastPath = useRef(pathname);
+  useEffect(() => {
+    captureAnalyticsEvent("$pageview", getRoutePageviewProperties(pathname));
+  }, [pathname]);
   useEffect(() => {
     if (lastPath.current !== pathname) {
       clearError();

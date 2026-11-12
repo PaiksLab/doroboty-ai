@@ -139,11 +139,13 @@ export function PrivacyPage() {
         <section aria-labelledby="analytics-privacy-title" className="prototype-panel">
           <h2 id="analytics-privacy-title">Analityka produktu</h2>
           <p>
-            Za Twoją zgodą PostHog (serwer w UE) zapisuje odsłony stron, kliknięcia linków i
-            przycisków oraz zdarzenia otwarcia i zapisania oferty. Nie zbieramy tekstu wpisywanego w
-            polach ani parametrów wyszukiwarki z adresu strony. Po zgodzie wysyłamy też tylko ogólny
-            rodzaj błędu JavaScript (okno lub obietnica), bez jego treści, stosu i adresu strony.
-            Nagrywanie sesji, heatmapy i śledzenie wydajności są wyłączone.
+            Za Twoją zgodą PostHog (serwer w UE) zapisuje odsłony tras, kliknięcia linków i
+            przycisków oraz zdarzenia otwarcia i zapisania oferty. Zdarzenia zawierają podstawowe
+            informacje techniczne o przeglądarce i urządzeniu; wzbogacanie o lokalizację jest
+            wyłączone. Nie zbieramy tekstu wpisywanego w polach ani parametrów wyszukiwarki z adresu
+            strony. Po zgodzie wysyłamy też tylko ogólny rodzaj błędu JavaScript (okno lub
+            obietnica), bez jego treści, stosu i adresu strony. Nagrywanie sesji, heatmapy i
+            śledzenie wydajności są wyłączone.
           </p>
           <p role="status" aria-live="polite">
             {analyticsConsent === "granted"

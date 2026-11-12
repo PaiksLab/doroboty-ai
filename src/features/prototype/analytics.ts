@@ -28,6 +28,11 @@ function cleanUrl(value: string) {
 }
 
 export function sanitizeAnalyticsEvent(event: CaptureResult): CaptureResult {
+  for (const key of Object.keys(event.properties)) {
+    if (key === "$ip" || key.startsWith("$geoip_")) delete event.properties[key];
+  }
+  event.properties["$geoip_disable"] = true;
+
   for (const key of ["$current_url", "$initial_current_url", "$referrer", "$el_href", "$href"]) {
     const value = event.properties[key];
     if (typeof value === "string") event.properties[key] = cleanUrl(value);
@@ -62,12 +67,21 @@ export function getFrontendErrorProperties(source: "window" | "promise") {
   return { error_source: source };
 }
 
+export function getRoutePageviewProperties(routePath: string) {
+  const route = routePath.split("?", 1)[0] || "/";
+  return {
+    route,
+    $current_url: typeof window === "undefined" ? route : `${window.location.origin}/#${route}`,
+  };
+}
+
 export function getAnalyticsConfig() {
   return {
     api_host: apiHost,
     defaults: "2026-08-30" as const,
-    capture_pageview: "history_change" as const,
-    capture_pageleave: "if_capture_pageview" as const,
+    capture_pageview: false,
+    capture_pageleave: false,
+    disable_capture_url_hashes: false,
     autocapture: false,
     disable_session_recording: true,
     disable_external_dependency_loading: true,
@@ -130,7 +144,9 @@ export function setAnalyticsConsent(allowed: boolean) {
 
   if (allowed) {
     posthog.opt_in_capturing({ captureEventName: false });
-    posthog.capture("$pageview");
+    const routePath =
+      typeof window === "undefined" ? "/" : window.location.hash.slice(1).split("?", 1)[0] || "/";
+    posthog.capture("$pageview", getRoutePageviewProperties(routePath));
   } else {
     posthog.opt_out_capturing();
   }
