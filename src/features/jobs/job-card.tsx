@@ -6,8 +6,24 @@ import type { JobWithCompany } from "./types";
 import { categoryLabels, functionLabels, remoteLabels, seniorityLabels } from "./presentation";
 import { CompanyLogo } from "./company-logo";
 import { SalaryFact } from "./salary-fact";
+import { captureAnalyticsEvent } from "@/features/prototype/analytics";
 export function JobCard({ job, saved }: { job: JobWithCompany; saved?: boolean }) {
   const { run } = usePrototype();
+
+  function openOffer() {
+    captureAnalyticsEvent("job_offer_opened", { job_id: job.id, source: "listing" });
+  }
+
+  function toggleSaved() {
+    const nextSaved = !saved;
+    if (run({ type: "toggle_saved", jobId: job.id })) {
+      captureAnalyticsEvent(nextSaved ? "job_offer_saved" : "job_offer_unsaved", {
+        job_id: job.id,
+        source: "listing",
+      });
+    }
+  }
+
   return (
     <article className="pp-job-card">
       <CompanyLogo company={job.company} />
@@ -20,7 +36,9 @@ export function JobCard({ job, saved }: { job: JobWithCompany; saved?: boolean }
           <span className="pp-job-category">{categoryLabels[job.category]}</span>
         </div>
         <h3 className="pp-job-title">
-          <Link to={`/oferty/${job.slug}`}>{job.title}</Link>
+          <Link to={`/oferty/${job.slug}`} onClick={openOffer}>
+            {job.title}
+          </Link>
         </h3>
         <div className="pp-job-facts">
           <span>
@@ -49,14 +67,14 @@ export function JobCard({ job, saved }: { job: JobWithCompany; saved?: boolean }
               size="icon-sm"
               aria-label={`Zapisz ofertę: ${job.title}`}
               aria-pressed={saved}
-              onClick={() => run({ type: "toggle_saved", jobId: job.id })}
+              onClick={toggleSaved}
             >
               <Bookmark className="pp-icon" />
             </Button>
           )}
         </div>
         <SalaryFact job={job} />
-        <Link className="pp-detail-button" to={`/oferty/${job.slug}`}>
+        <Link className="pp-detail-button" to={`/oferty/${job.slug}`} onClick={openOffer}>
           Zobacz rolę <ArrowUpRight className="pp-icon" />
         </Link>
       </div>

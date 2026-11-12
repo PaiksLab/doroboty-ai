@@ -10,6 +10,7 @@ import {
   type ReviewDecision,
   type WorkSampleReviewDraft,
 } from "./work-sample";
+import { captureAnalyticsEvent } from "./analytics";
 
 export function WorkSampleReview({
   draft,
@@ -42,6 +43,12 @@ export function WorkSampleReview({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    captureAnalyticsEvent("caseforge_work_sample_review_completed", {
+      next_step: draft.decision,
+      problem_status: draft.criterionStatuses.problem,
+      test_status: draft.criterionStatuses.test,
+      contribution_status: draft.criterionStatuses.contribution,
+    });
     onComplete();
   }
 

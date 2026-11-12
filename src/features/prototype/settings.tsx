@@ -4,6 +4,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { usePrototype } from "./store";
 import { serializeState, MAX_IMPORT_BYTES } from "./storage";
 import { PageTitle } from "./shell";
+import { getAnalyticsConsent, setAnalyticsConsent } from "./analytics";
 
 export function downloadText(name: string, text: string, type = "application/json") {
   const url = URL.createObjectURL(new Blob([text], { type }));
@@ -115,6 +116,13 @@ export function SettingsPage() {
   );
 }
 export function PrivacyPage() {
+  const [analyticsConsent, setConsent] = useState(getAnalyticsConsent);
+
+  function updateConsent(allowed: boolean) {
+    setAnalyticsConsent(allowed);
+    setConsent(getAnalyticsConsent());
+  }
+
   return (
     <section className="prototype-section max-w-4xl">
       <h1>Prywatność prototypu</h1>
@@ -125,12 +133,47 @@ export function PrivacyPage() {
         </p>
         <p>
           Profile, aplikacje i ustawienia pozostają w pamięci tej przeglądarki. Aplikacja nie wysyła
-          ich do bazy, dostawcy AI ani systemu analitycznego. Plik eksportu zawiera cały lokalny
-          scenariusz, w tym notatki.
+          ich do bazy ani dostawcy AI. Plik eksportu zawiera cały lokalny scenariusz, w tym notatki.
+          Hosting może prowadzić własne logi dostępu.
         </p>
+        <section aria-labelledby="analytics-privacy-title" className="prototype-panel">
+          <h2 id="analytics-privacy-title">Analityka produktu</h2>
+          <p>
+            Za Twoją zgodą PostHog (serwer w UE) zapisuje odsłony stron, kliknięcia linków i
+            przycisków oraz zdarzenia otwarcia i zapisania oferty. Nie zbieramy tekstu wpisywanego w
+            polach ani parametrów wyszukiwarki z adresu strony. Po zgodzie wysyłamy też tylko ogólny
+            rodzaj błędu JavaScript (okno lub obietnica), bez jego treści, stosu i adresu strony.
+            Nagrywanie sesji, heatmapy i śledzenie wydajności są wyłączone.
+          </p>
+          <p role="status" aria-live="polite">
+            {analyticsConsent === "granted"
+              ? "Analityka jest włączona."
+              : analyticsConsent === "denied"
+                ? "Analityka jest wyłączona."
+                : analyticsConsent === "pending"
+                  ? "Analityka jest wyłączona do czasu Twojej decyzji."
+                  : "Analityka nie jest skonfigurowana w tym wdrożeniu."}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              disabled={analyticsConsent === "unavailable" || analyticsConsent === "granted"}
+              onClick={() => updateConsent(true)}
+            >
+              Zezwól na analitykę
+            </Button>
+            <Button
+              variant="outline"
+              disabled={analyticsConsent === "unavailable" || analyticsConsent === "denied"}
+              onClick={() => updateConsent(false)}
+            >
+              Wyłącz analitykę
+            </Button>
+          </div>
+        </section>
         <p>
           Możesz usunąć zmiany przyciskiem „Resetuj scenariusz” w ustawieniach lub wyczyścić dane
-          witryny w przeglądarce. Hosting może prowadzić własne logi dostępu.
+          witryny w przeglądarce.
         </p>
       </div>
     </section>

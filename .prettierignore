@@ -4,6 +4,7 @@ package-lock.json
 playwright-report*
 test-results
 artifacts
+docs/production-readiness.html
 
 # Preserve the versioned reference byte-for-byte; checked by its own scripts.
 docs/design-system/agent-kit/

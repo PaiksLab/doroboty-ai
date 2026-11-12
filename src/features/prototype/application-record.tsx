@@ -7,6 +7,7 @@ import { MatchScore } from "./match-score";
 import { stageLabels, type Application, type Stage } from "./model";
 import { createEmptyWorkSampleReviewDraft } from "./work-sample";
 import { WorkSampleReview } from "./work-sample-review";
+import { captureAnalyticsEvent } from "./analytics";
 
 type RecordEvent = { stage: Stage; at: string; note?: string };
 const dateFormat = new Intl.DateTimeFormat("pl-PL", {
@@ -122,6 +123,11 @@ export function ApplicationRecord({
           label={candidate ? "Twoja wysłana aplikacja" : "Materiały kandydata"}
           sections={sections}
           footer={footer}
+          onSectionChange={(value) => {
+            if (value === "work-sample") {
+              captureAnalyticsEvent("caseforge_work_sample_opened");
+            }
+          }}
         >
           {children}
         </RecordSheet>

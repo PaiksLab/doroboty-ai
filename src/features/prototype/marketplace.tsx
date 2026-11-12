@@ -26,6 +26,7 @@ import { usePrototype } from "./store";
 import { currentPerson, publishedJobs } from "./model";
 import { NotFound } from "./shell";
 import { cn } from "@/lib/utils";
+import { captureAnalyticsEvent } from "./analytics";
 
 function LocalMap({ jobs }: { jobs: JobWithCompany[] }) {
   const [selected, setSelected] = useState<string | null>(null);
@@ -76,7 +77,13 @@ function LocalMap({ jobs }: { jobs: JobWithCompany[] }) {
             <p className="my-3">
               {job.company.name} · {job.locations.join(" / ")}
             </p>
-            <Link to={`/oferty/${job.slug}`} className={buttonVariants({ variant: "outline" })}>
+            <Link
+              to={`/oferty/${job.slug}`}
+              className={buttonVariants({ variant: "outline" })}
+              onClick={() =>
+                captureAnalyticsEvent("job_offer_opened", { job_id: job.id, source: "map" })
+              }
+            >
               Zobacz rolę
             </Link>
           </>
@@ -86,7 +93,13 @@ function LocalMap({ jobs }: { jobs: JobWithCompany[] }) {
         <ul className="mt-5 space-y-3">
           {jobs.map((x) => (
             <li key={x.id}>
-              <Link className="text-[var(--gui-link)] underline" to={`/oferty/${x.slug}`}>
+              <Link
+                className="text-[var(--gui-link)] underline"
+                to={`/oferty/${x.slug}`}
+                onClick={() =>
+                  captureAnalyticsEvent("job_offer_opened", { job_id: x.id, source: "map" })
+                }
+              >
                 {x.title} · {x.company.name}
               </Link>
             </li>
@@ -344,6 +357,10 @@ export function JobPage() {
   const { state, run } = usePrototype();
   const person = currentPerson(state);
   const job = publishedJobs(state).find((x) => x.slug === slug);
+  const jobId = job?.id;
+  useEffect(() => {
+    if (jobId) captureAnalyticsEvent("job_offer_viewed", { job_id: jobId });
+  }, [jobId]);
   if (!job) return <NotFound />;
   const saved = state.saved.some((x) => x.candidateId === person?.id && x.jobId === job.id);
   const submitted = state.applications.find(
@@ -430,7 +447,15 @@ export function JobPage() {
                     variant="outline"
                     aria-label="Zapisz ofertę"
                     aria-pressed={saved}
-                    onClick={() => run({ type: "toggle_saved", jobId: job.id })}
+                    onClick={() => {
+                      const nextSaved = !saved;
+                      if (run({ type: "toggle_saved", jobId: job.id })) {
+                        captureAnalyticsEvent(nextSaved ? "job_offer_saved" : "job_offer_unsaved", {
+                          job_id: job.id,
+                          source: "offer_detail",
+                        });
+                      }
+                    }}
                   >
                     <Bookmark className={cn(saved && "fill-current")} />
                     Zapisz ofertę
